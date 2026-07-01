@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BookingService {
@@ -32,6 +33,7 @@ public class BookingService {
         this.scheduleService = scheduleService;
     }
 
+    @Transactional
     public Booking createBooking(int userId, int equipmentId, int slotId, LocalDate date) {
 
         validateEquipmentAvailability(equipmentId);
@@ -68,6 +70,7 @@ public class BookingService {
         return bookingDao.save(booking);
     }
 
+    @Transactional
     public void cancelBooking(int bookingId, int userId) {
 
         Booking booking = bookingDao.findById(bookingId)

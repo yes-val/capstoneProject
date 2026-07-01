@@ -13,6 +13,7 @@ import org.springframework.context.support.ReloadableResourceBundleMessageSource
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.io.InputStream;
 import java.sql.Connection;
@@ -21,6 +22,7 @@ import javax.sql.DataSource;
 
 @Configuration
 @ComponentScan("kz.epam.campus")
+@EnableTransactionManagement
 public class AppConfig {
 
     @Bean

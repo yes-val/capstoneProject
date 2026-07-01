@@ -5,6 +5,7 @@ import kz.epam.campus.model.User;
 import kz.epam.campus.services.BookingException;
 import kz.epam.campus.services.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +23,7 @@ public class UserServiceImpl implements UserService {
         this.encoder = encoder;
     }
 
+    @Transactional
     public User register(User user) {
         user.setPasswordHash(encoder.encode(user.getPasswordHash()));
         return userDao.save(user);
@@ -51,6 +53,7 @@ public class UserServiceImpl implements UserService {
         userDao.save(user);
     }
 
+    @Transactional
     public void updateProfile(User user, boolean passwordChanged) {
         if (passwordChanged) {
             user.setPasswordHash(encoder.encode(user.getPasswordHash()));

@@ -19,6 +19,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ScheduleService {
@@ -44,6 +45,7 @@ public class ScheduleService {
                 .orElse(true); // no schedule row => default open
     }
 
+    @Transactional
     public void setWorkingDay(LocalDate date) {
         setWorkingDay(date, LabHours.DEFAULT_START, LabHours.DEFAULT_END);
     }
@@ -60,6 +62,7 @@ public class ScheduleService {
         scheduleDao.save(schedule);
     }
 
+    @Transactional
     public void setHoliday(LocalDate date) {
         Schedule schedule = scheduleDao.findByDate(date).orElseGet(Schedule::new);
 
