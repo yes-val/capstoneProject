@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS slots (
 
 -- Note: equipment_id is intentionally denormalized here (also stored
 -- in slots.equipment_id) to avoid a join when querying booking details.
--- This trades 3NF compliance for query simplicity; referential
+-- This trades 3NF compliance for query simplicity. Referential
 -- integrity between bookings.equipment_id and equipment.equipment_id
 -- is enforced by the FK constraint below.
 CREATE TABLE IF NOT EXISTS bookings (
