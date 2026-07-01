@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS slots (
     slot_id INT AUTO_INCREMENT PRIMARY KEY,
     equipment_id INT,
     date DATE,
-    time_start TIME
+    time_start TIME,
+    CONSTRAINT fk_slots_equipment FOREIGN KEY (equipment_id) REFERENCES equipment(equipment_id)
 );
 
 CREATE TABLE IF NOT EXISTS bookings (
@@ -27,7 +28,10 @@ CREATE TABLE IF NOT EXISTS bookings (
     slot_id INT,
     equipment_id INT,
     status VARCHAR(20),
-    time_created TIMESTAMP
+    time_created TIMESTAMP,
+    CONSTRAINT fk_bookings_user FOREIGN KEY (user_id) REFERENCES users(user_id),
+    CONSTRAINT fk_bookings_slot FOREIGN KEY (slot_id) REFERENCES slots(slot_id),
+    CONSTRAINT fk_bookings_equipment FOREIGN KEY (equipment_id) REFERENCES equipment(equipment_id)
 );
 
 CREATE TABLE IF NOT EXISTS notifications (
@@ -35,7 +39,9 @@ CREATE TABLE IF NOT EXISTS notifications (
     user_id INT,
     booking_id INT,
     status VARCHAR(20),
-    time_sent TIMESTAMP
+    time_sent TIMESTAMP,
+    CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(user_id),
+    CONSTRAINT fk_notifications_booking FOREIGN KEY (booking_id) REFERENCES bookings(booking_id)
 );
 
 CREATE TABLE IF NOT EXISTS schedules (
