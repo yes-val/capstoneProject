@@ -22,6 +22,11 @@ CREATE TABLE IF NOT EXISTS slots (
     CONSTRAINT fk_slots_equipment FOREIGN KEY (equipment_id) REFERENCES equipment(equipment_id)
 );
 
+-- Note: equipment_id is intentionally denormalized here (also stored
+-- in slots.equipment_id) to avoid a join when querying booking details.
+-- This trades 3NF compliance for query simplicity; referential
+-- integrity between bookings.equipment_id and equipment.equipment_id
+-- is enforced by the FK constraint below.
 CREATE TABLE IF NOT EXISTS bookings (
     booking_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
