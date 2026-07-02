@@ -31,6 +31,7 @@ public class AdminUserServlet extends HttpServlet {
 
         if (!securityService.isAdmin()) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Admin access required.");
+
             return;
         }
 
@@ -44,6 +45,7 @@ public class AdminUserServlet extends HttpServlet {
 
         if (!securityService.isAdmin()) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Admin access required.");
+
             return;
         }
 

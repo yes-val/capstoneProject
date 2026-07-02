@@ -1,5 +1,5 @@
 package kz.epam.campus.services;
-
+// discrete IF
 import kz.epam.campus.dao.EquipmentDao;
 import kz.epam.campus.model.Equipment;
 

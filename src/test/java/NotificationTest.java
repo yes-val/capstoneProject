@@ -1,4 +1,4 @@
-import kz.epam.campus.dao.BookingDao;
+import kz.epam.campus.dao.BookingCommonDao;
 import kz.epam.campus.dao.EquipmentDao;
 import kz.epam.campus.dao.SlotDao;
 import kz.epam.campus.dao.UserDao;
@@ -51,7 +51,7 @@ public class NotificationTest extends BaseDbTest {
         slot.setTimeStart(LocalTime.of(9, 0));
         int slotId = slotDao.save(slot).getSlotId();
 
-        BookingDao bookingDao = ctx.getBean(BookingDao.class);
+        BookingCommonDao bookingDao = ctx.getBean(BookingCommonDao.class);
         Booking booking = new Booking();
         booking.setUserId(userId);
         booking.setSlotId(slotId);

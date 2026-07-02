@@ -3,7 +3,7 @@ package kz.epam.campus.dao;
 import java.util.List;
 import java.util.Optional;
 
-public interface DaoInterface<T, ID> {
+public interface CommonDao<T, ID> {
 
     T save(T entity);
 

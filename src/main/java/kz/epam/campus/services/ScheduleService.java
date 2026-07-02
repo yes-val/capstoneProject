@@ -1,7 +1,7 @@
 package kz.epam.campus.services;
 
 
-import kz.epam.campus.dao.BookingDao;
+import kz.epam.campus.dao.BookingCommonDao;
 import kz.epam.campus.dao.ScheduleDao;
 import kz.epam.campus.dao.SlotDao;
 import kz.epam.campus.dao.UserDao;
@@ -9,7 +9,6 @@ import kz.epam.campus.model.Booking;
 import kz.epam.campus.model.BookingStatus;
 import kz.epam.campus.model.Schedule;
 import kz.epam.campus.model.Slot;
-import kz.epam.campus.model.User;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -26,11 +25,11 @@ public class ScheduleService {
 
     private final ScheduleDao scheduleDao;
     private final SlotDao slotDao;
-    private final BookingDao bookingDao;
+    private final BookingCommonDao bookingDao;
     private final UserDao userDao;
     private final NotificationService notificationService;
 
-    public ScheduleService(ScheduleDao scheduleDao, SlotDao slotDao, BookingDao bookingDao,
+    public ScheduleService(ScheduleDao scheduleDao, SlotDao slotDao, BookingCommonDao bookingDao,
                            UserDao userDao, NotificationService notificationService) {
         this.scheduleDao = scheduleDao;
         this.slotDao = slotDao;

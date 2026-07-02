@@ -4,7 +4,7 @@ import kz.epam.campus.model.Equipment;
 
 import java.util.List;
 
-public interface EquipmentDao extends DaoInterface<Equipment, Integer> {
+public interface EquipmentDao extends CommonDao<Equipment, Integer> {
 
     List<Equipment> findAllActive();
 }

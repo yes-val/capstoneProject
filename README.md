@@ -4,6 +4,10 @@ A web application for booking engineering lab equipment at a university. Built a
 
 ---
 
+TODO
+Pagination in DAO,
+
+
 ## Technology Stack
 
 | Layer | Technology |

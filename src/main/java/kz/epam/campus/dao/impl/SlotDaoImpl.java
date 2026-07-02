@@ -16,6 +16,22 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class SlotDaoImpl implements SlotDao {
 
+    private static final String DATE_TIME_START_VALUES = "INSERT INTO slots(equipment_id,date,time_start) VALUES (?,?,?)";
+    private static final String WHERE_SLOT_ID = "SELECT * FROM slots WHERE slot_id=?";
+    private static final String SELECT_FROM_SLOTS = "SELECT * FROM slots";
+    private static final String SLOTS_WHERE_SLOT_ID = "DELETE FROM slots WHERE slot_id=?";
+    private static final String SLOTS_WHERE_EQUIPMENT_ID_AND_DATE = "SELECT * FROM slots WHERE equipment_id=? AND date=?";
+    private static final String SLOT_ID_AND_B_STATUS = """
+            SELECT s.* FROM slots s
+            WHERE s.equipment_id = ?
+            AND s.date = ?
+            AND NOT EXISTS (
+                SELECT 1 FROM bookings b
+                WHERE b.slot_id = s.slot_id
+                AND b.status = ?
+            )
+            """;
+    public static final String AND_DATE_LIMIT_1 = "SELECT 1 FROM slots WHERE equipment_id=? AND date=? LIMIT 1";
     private final DataSource ds;
 
     public SlotDaoImpl(DataSource ds) {
@@ -30,7 +46,7 @@ public class SlotDaoImpl implements SlotDao {
             if (slot.getSlotId() == 0) {
 
                 try (PreparedStatement ps = c.prepareStatement(
-                        "INSERT INTO slots(equipment_id,date,time_start) VALUES (?,?,?)",
+                        DATE_TIME_START_VALUES,
                         Statement.RETURN_GENERATED_KEYS
                 )) {
                     ps.setInt(1, slot.getEquipmentId());
@@ -57,7 +73,7 @@ public class SlotDaoImpl implements SlotDao {
     public Optional<Slot> findById(Integer id) {
 
         try (Connection c = ds.getConnection();
-             PreparedStatement ps = c.prepareStatement("SELECT * FROM slots WHERE slot_id=?")) {
+             PreparedStatement ps = c.prepareStatement(WHERE_SLOT_ID)) {
 
             ps.setInt(1, id);
 
@@ -78,7 +94,7 @@ public class SlotDaoImpl implements SlotDao {
 
         try (Connection c = ds.getConnection();
              Statement st = c.createStatement();
-             ResultSet rs = st.executeQuery("SELECT * FROM slots")) {
+             ResultSet rs = st.executeQuery(SELECT_FROM_SLOTS)) {
 
             List<Slot> list = new ArrayList<>();
 
@@ -97,7 +113,7 @@ public class SlotDaoImpl implements SlotDao {
     public void delete(Integer id) {
 
         try (Connection c = ds.getConnection();
-             PreparedStatement ps = c.prepareStatement("DELETE FROM slots WHERE slot_id=?")) {
+             PreparedStatement ps = c.prepareStatement(SLOTS_WHERE_SLOT_ID)) {
 
             ps.setInt(1, id);
             ps.executeUpdate();
@@ -111,7 +127,7 @@ public class SlotDaoImpl implements SlotDao {
     public List<Slot> findByEquipmentIdAndDate(int equipmentId, LocalDate date) {
 
         try (Connection c = ds.getConnection();
-             PreparedStatement ps = c.prepareStatement("SELECT * FROM slots WHERE equipment_id=? AND date=?")) {
+             PreparedStatement ps = c.prepareStatement(SLOTS_WHERE_EQUIPMENT_ID_AND_DATE)) {
 
             ps.setInt(1, equipmentId);
             ps.setDate(2, Date.valueOf(date));
@@ -134,16 +150,7 @@ public class SlotDaoImpl implements SlotDao {
 
         try (Connection c = ds.getConnection();
              PreparedStatement ps = c.prepareStatement(
-                     """
-                             SELECT s.* FROM slots s
-                             WHERE s.equipment_id = ?
-                             AND s.date = ?
-                             AND NOT EXISTS (
-                                 SELECT 1 FROM bookings b
-                                 WHERE b.slot_id = s.slot_id
-                                 AND b.status = ?
-                             )
-                             """
+                     SLOT_ID_AND_B_STATUS
              )) {
 
             ps.setInt(1, equipmentId);
@@ -167,7 +174,7 @@ public class SlotDaoImpl implements SlotDao {
     public boolean existsByEquipmentIdAndDate(int equipmentId, LocalDate date) {
 
         try (Connection c = ds.getConnection();
-             PreparedStatement ps = c.prepareStatement("SELECT 1 FROM slots WHERE equipment_id=? AND date=? LIMIT 1")) {
+             PreparedStatement ps = c.prepareStatement(AND_DATE_LIMIT_1)) {
 
             ps.setInt(1, equipmentId);
             ps.setDate(2, Date.valueOf(date));

@@ -1,4 +1,4 @@
-import kz.epam.campus.dao.BookingDao;
+import kz.epam.campus.dao.BookingCommonDao;
 import kz.epam.campus.dao.EquipmentDao;
 import kz.epam.campus.dao.NotificationDao;
 import kz.epam.campus.dao.SlotDao;
@@ -239,7 +239,7 @@ public class BookingRulesTest extends BaseDbTest {
 
         scheduleService.setHoliday(LocalDate.now());
 
-        BookingDao bookingDao = ctx.getBean(BookingDao.class);
+        BookingCommonDao bookingDao = ctx.getBean(BookingCommonDao.class);
         Booking afterHoliday = bookingDao.findById(booking.getBookingId()).orElseThrow();
 
         assertEquals(BookingStatus.CANCELLED, afterHoliday.getStatus());

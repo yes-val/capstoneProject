@@ -42,6 +42,7 @@ public class Slot {
     }
 
     public LocalTime getTimeEnd() {
+
         return timeStart.plusHours(1);
     }
 }

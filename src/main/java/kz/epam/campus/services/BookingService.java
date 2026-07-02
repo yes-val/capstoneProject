@@ -1,6 +1,6 @@
 package kz.epam.campus.services;
 
-import kz.epam.campus.dao.BookingDao;
+import kz.epam.campus.dao.BookingCommonDao;
 import kz.epam.campus.dao.EquipmentDao;
 import kz.epam.campus.dao.SlotDao;
 import kz.epam.campus.model.Booking;
@@ -21,12 +21,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class BookingService {
 
-    private final BookingDao bookingDao;
+    private final BookingCommonDao bookingDao;
     private final SlotDao slotDao;
     private final EquipmentDao equipmentDao;
     private final ScheduleService scheduleService;
 
-    public BookingService(BookingDao bookingDao, SlotDao slotDao, EquipmentDao equipmentDao, ScheduleService scheduleService) {
+    public BookingService(BookingCommonDao bookingDao, SlotDao slotDao, EquipmentDao equipmentDao, ScheduleService scheduleService) {
         this.bookingDao = bookingDao;
         this.slotDao = slotDao;
         this.equipmentDao = equipmentDao;

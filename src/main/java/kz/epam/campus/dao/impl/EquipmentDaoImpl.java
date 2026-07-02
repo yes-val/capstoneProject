@@ -12,18 +12,24 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class EquipmentDaoImpl implements EquipmentDao {
 
-    private final DataSource ds;
+    private static final String DESCRIPTION_IS_ACTIVE_VALUES = "INSERT INTO equipment(name,description,is_active) VALUES (?,?,?)";
+    private static final String DESCRIPTION_IS_ACTIVE_WHERE_EQUIPMENT_ID = "UPDATE equipment SET name=?, description=?, is_active=? WHERE equipment_id=?";
+    private static final String EQUIPMENT_WHERE_EQUIPMENT_ID = "SELECT * FROM equipment WHERE equipment_id=?";
+    private static final String FROM_EQUIPMENT = "SELECT * FROM equipment";
+    private static final String EQUIPMENT_WHERE_IS_ACTIVE = "SELECT * FROM equipment WHERE is_active=?";
+    private static final String WHERE_EQUIPMENT_ID = "DELETE FROM equipment WHERE equipment_id=?";
+    private final DataSource dataSource;
 
     public EquipmentDaoImpl(DataSource ds) {
-        this.ds = ds;
+        this.dataSource = ds;
     }
 
     public Equipment save(Equipment e) {
-        try (Connection c = ds.getConnection()) {
+        try (Connection c = dataSource.getConnection()) {
 
             if (e.getEquipmentId() == 0) {
                 try (PreparedStatement ps = c.prepareStatement(
-                        "INSERT INTO equipment(name,description,is_active) VALUES (?,?,?)",
+                        DESCRIPTION_IS_ACTIVE_VALUES,
                         Statement.RETURN_GENERATED_KEYS
                 )) {
                     ps.setString(1, e.getName());
@@ -38,7 +44,7 @@ public class EquipmentDaoImpl implements EquipmentDao {
                 }
             } else {
                 try (PreparedStatement ps = c.prepareStatement(
-                        "UPDATE equipment SET name=?, description=?, is_active=? WHERE equipment_id=?"
+                        DESCRIPTION_IS_ACTIVE_WHERE_EQUIPMENT_ID
                 )) {
                     ps.setString(1, e.getName());
                     ps.setString(2, e.getDescription());
@@ -57,8 +63,8 @@ public class EquipmentDaoImpl implements EquipmentDao {
     }
 
     public Optional<Equipment> findById(Integer id) {
-        try (Connection c = ds.getConnection();
-             PreparedStatement ps = c.prepareStatement("SELECT * FROM equipment WHERE equipment_id=?")) {
+        try (Connection c = dataSource.getConnection();
+             PreparedStatement ps = c.prepareStatement(EQUIPMENT_WHERE_EQUIPMENT_ID)) {
 
             ps.setInt(1, id);
 
@@ -73,9 +79,9 @@ public class EquipmentDaoImpl implements EquipmentDao {
     }
 
     public List<Equipment> findAll() {
-        try (Connection c = ds.getConnection();
+        try (Connection c = dataSource.getConnection();
              Statement st = c.createStatement();
-             ResultSet rs = st.executeQuery("SELECT * FROM equipment")) {
+             ResultSet rs = st.executeQuery(FROM_EQUIPMENT)) {
 
             List<Equipment> list = new ArrayList<>();
             while (rs.next()) {
@@ -90,8 +96,8 @@ public class EquipmentDaoImpl implements EquipmentDao {
 
     @Override
     public List<Equipment> findAllActive() {
-        try (Connection c = ds.getConnection();
-             PreparedStatement ps = c.prepareStatement("SELECT * FROM equipment WHERE is_active=?")) {
+        try (Connection c = dataSource.getConnection();
+             PreparedStatement ps = c.prepareStatement(EQUIPMENT_WHERE_IS_ACTIVE)) {
 
             ps.setBoolean(1, true);
 
@@ -109,8 +115,8 @@ public class EquipmentDaoImpl implements EquipmentDao {
     }
 
     public void delete(Integer id) {
-        try (Connection c = ds.getConnection();
-             PreparedStatement ps = c.prepareStatement("DELETE FROM equipment WHERE equipment_id=?")) {
+        try (Connection c = dataSource.getConnection();
+             PreparedStatement ps = c.prepareStatement(WHERE_EQUIPMENT_ID)) {
 
             ps.setInt(1, id);
             ps.executeUpdate();

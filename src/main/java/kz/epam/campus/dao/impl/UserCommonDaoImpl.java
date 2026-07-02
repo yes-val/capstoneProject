@@ -11,11 +11,11 @@ import java.util.*;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class UserDaoImpl implements UserDao {
+public class UserCommonDaoImpl implements UserDao {
 
     private final DataSource ds;
 
-    public UserDaoImpl(DataSource ds) {
+    public UserCommonDaoImpl(DataSource ds) {
         this.ds = ds;
     }
 

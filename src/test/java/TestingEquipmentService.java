@@ -5,7 +5,9 @@ import kz.epam.campus.services.EquipmentService;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -18,21 +20,21 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class TestingEquipmentService {
+    private static final String EQUIPMENT_NOT_FOUND = "Equipment not found";
 
     @Mock
     private EquipmentDao equipmentDao;
 
+    @Captor
+    private ArgumentCaptor<Equipment> equipmentCaptor; //clean code, put it into
+
     @InjectMocks
-    private EquipmentService equipmentService;
+    private EquipmentService equipmentService; // testingInstance []
+
+    //First has to be overriden public methods, then public methods, then protected methods, then default method, then private (if one PM calls another PM, the called one follows below)
 
     private static final int EQUIPMENT_ID = 10;
 
-    private Equipment equipment(int equipmentId, boolean active) {
-        Equipment equipment = new Equipment();
-        equipment.setEquipmentId(equipmentId);
-        equipment.setActive(active);
-        return equipment;
-    }
 
     // ---------------------------------------------------------------
     // getActiveEquipment
@@ -41,7 +43,7 @@ public class TestingEquipmentService {
     @Test
     void getActiveEquipment_returnsListFromDao() {
         // GIVEN
-        List<Equipment> expected = List.of(equipment(1, true), equipment(2, true));
+        List<Equipment> expected = List.of(getEquipment(1, true), getEquipment(2, true));
         when(equipmentDao.findAllActive()).thenReturn(expected);
 
         // WHEN
@@ -72,7 +74,7 @@ public class TestingEquipmentService {
     @Test
     void getById_returnsEquipment_whenFound() {
         // GIVEN
-        when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.of(equipment(EQUIPMENT_ID, true)));
+        when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.of(getEquipment(EQUIPMENT_ID, true)));
 
         // WHEN
         Equipment result = equipmentService.getById(EQUIPMENT_ID);
@@ -83,17 +85,15 @@ public class TestingEquipmentService {
     }
 
     @Test
-    void getById_throwsException_whenNotFound() {
+    void shouldNotGetByIdWhenEquipmentNotFound() { //camelCaseOnly
         // GIVEN
         when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.empty());
 
         // WHEN
-        BookingException exception = assertThrows(BookingException.class,
-                () -> equipmentService.getById(EQUIPMENT_ID));
+        Executable executable = () -> equipmentService.getById(EQUIPMENT_ID);
 
         // THEN
-        verify(equipmentDao).findById(EQUIPMENT_ID);
-        assertEquals("Equipment not found", exception.getMessage());
+        assertThrows(BookingException.class, executable, EQUIPMENT_NOT_FOUND);
     }
 
     // ---------------------------------------------------------------
@@ -103,21 +103,20 @@ public class TestingEquipmentService {
     @Test
     void createEquipment_setsActiveTrueAndSaves() {
         // GIVEN
-        Equipment newEquipment = equipment(0, false);
+        Equipment newEquipment = getEquipment(0, false);
 
         // WHEN
         equipmentService.createEquipment(newEquipment);
 
         // THEN
-        ArgumentCaptor<Equipment> captor = ArgumentCaptor.forClass(Equipment.class);
-        verify(equipmentDao).save(captor.capture());
-        assertTrue(captor.getValue().isActive());
+        verify(equipmentDao).save(equipmentCaptor.capture());
+        assertTrue(equipmentCaptor.getValue().isActive());
     }
 
     @Test
     void createEquipment_forcesActiveTrue_evenWhenAlreadyActive() {
         // GIVEN
-        Equipment newEquipment = equipment(0, true);
+        Equipment newEquipment = getEquipment(0, true);
 
         // WHEN
         equipmentService.createEquipment(newEquipment);
@@ -135,7 +134,7 @@ public class TestingEquipmentService {
     @Test
     void updateEquipment_savesEquipmentAsIs() {
         // GIVEN
-        Equipment existing = equipment(EQUIPMENT_ID, false);
+        Equipment existing = getEquipment(EQUIPMENT_ID, false);
 
         // WHEN
         equipmentService.updateEquipment(existing);
@@ -154,7 +153,7 @@ public class TestingEquipmentService {
     @Test
     void deactivateEquipment_success_whenFound() {
         // GIVEN
-        when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.of(equipment(EQUIPMENT_ID, true)));
+        when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.of(getEquipment(EQUIPMENT_ID, true)));
 
         // WHEN
         equipmentService.deactivateEquipment(EQUIPMENT_ID);
@@ -176,6 +175,14 @@ public class TestingEquipmentService {
 
         // THEN
         verify(equipmentDao, never()).save(any());
-        assertEquals("Equipment not found", exception.getMessage());
+        assertEquals(EQUIPMENT_NOT_FOUND, exception.getMessage());
+    }
+
+    private Equipment getEquipment(int equipmentId, boolean active) {
+        Equipment equipment = new Equipment();
+        equipment.setEquipmentId(equipmentId);
+        equipment.setActive(active);
+
+        return equipment;
     }
 }

@@ -14,26 +14,25 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class ScheduleDaoImpl implements ScheduleDao {
+    private static final String TIME_END_DATE_WORKING_DAY_VALUES = """
+            INSERT INTO schedules
+            ("day",time_start,time_end,date,working_day)
+            VALUES (?,?,?,?,?)
+            """;
 
-    private final DataSource ds;
+    private final DataSource dataSource;
 
-    public ScheduleDaoImpl(DataSource ds) {
-        this.ds = ds;
+    public ScheduleDaoImpl(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     @Override
     public Schedule save(Schedule schedule) {
 
-        try (Connection c = ds.getConnection()) {
-
+        try (Connection c = dataSource.getConnection()) {
             if (schedule.getScheduleId() == 0) {
-
                 try (PreparedStatement ps = c.prepareStatement(
-                        """
-                                INSERT INTO schedules
-                                ("day",time_start,time_end,date,working_day)
-                                VALUES (?,?,?,?,?)
-                                """,
+                        TIME_END_DATE_WORKING_DAY_VALUES,
                         Statement.RETURN_GENERATED_KEYS
                 )) {
                     ps.setString(1, schedule.getDay());
@@ -70,7 +69,6 @@ public class ScheduleDaoImpl implements ScheduleDao {
             }
 
             return schedule;
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -78,8 +76,7 @@ public class ScheduleDaoImpl implements ScheduleDao {
 
     @Override
     public Optional<Schedule> findById(Integer id) {
-
-        try (Connection c = ds.getConnection();
+        try (Connection c = dataSource.getConnection();
              PreparedStatement ps = c.prepareStatement("SELECT * FROM schedules WHERE schedule_id=?")) {
 
             ps.setInt(1, id);
@@ -88,6 +85,7 @@ public class ScheduleDaoImpl implements ScheduleDao {
                 if (!rs.next()) {
                     return Optional.empty();
                 }
+
                 return Optional.of(map(rs));
             }
 
@@ -98,8 +96,7 @@ public class ScheduleDaoImpl implements ScheduleDao {
 
     @Override
     public List<Schedule> findAll() {
-
-        try (Connection c = ds.getConnection();
+        try (Connection c = dataSource.getConnection();
              Statement st = c.createStatement();
              ResultSet rs = st.executeQuery("SELECT * FROM schedules")) {
 
@@ -110,7 +107,6 @@ public class ScheduleDaoImpl implements ScheduleDao {
             }
 
             return list;
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -118,8 +114,7 @@ public class ScheduleDaoImpl implements ScheduleDao {
 
     @Override
     public Optional<Schedule> findByDate(LocalDate date) {
-
-        try (Connection c = ds.getConnection();
+        try (Connection c = dataSource.getConnection();
              PreparedStatement ps = c.prepareStatement("SELECT * FROM schedules WHERE date=?")) {
 
             ps.setDate(1, Date.valueOf(date));
@@ -138,8 +133,7 @@ public class ScheduleDaoImpl implements ScheduleDao {
 
     @Override
     public void delete(Integer id) {
-
-        try (Connection c = ds.getConnection();
+        try (Connection c = dataSource.getConnection();
              PreparedStatement ps = c.prepareStatement("DELETE FROM schedules WHERE schedule_id=?")) {
 
             ps.setInt(1, id);
@@ -160,16 +154,6 @@ public class ScheduleDaoImpl implements ScheduleDao {
         schedule.setTimeEnd(rs.getTime("time_end").toLocalTime());
         schedule.setDate(rs.getDate("date").toLocalDate());
         schedule.setWorkingDay(rs.getBoolean("working_day"));
-
-
-
-
-
-
-
-
-
-
 
         return schedule;
     }

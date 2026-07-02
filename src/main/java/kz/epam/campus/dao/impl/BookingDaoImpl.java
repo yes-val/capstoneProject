@@ -1,6 +1,6 @@
 package kz.epam.campus.dao.impl;
 
-import kz.epam.campus.dao.BookingDao;
+import kz.epam.campus.dao.BookingCommonDao;
 import kz.epam.campus.model.Booking;
 import kz.epam.campus.model.BookingStatus;
 
@@ -11,8 +11,16 @@ import java.util.*;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class BookingDaoImpl implements BookingDao {
+public class BookingDaoImpl implements BookingCommonDao {
 
+    private static final String ID_STATUS_TIME_CREATED_VALUES = "INSERT INTO bookings(user_id,slot_id,equipment_id,status,time_created) VALUES (?,?,?,?,?)";
+    private static final String STATUS_WHERE_BOOKING_ID = "UPDATE bookings SET status=? WHERE booking_id=?";
+    private static final String WHERE_BOOKING_ID = "SELECT * FROM bookings WHERE booking_id=?";
+    private static final String FROM_BOOKINGS = "SELECT * FROM bookings";
+    private static final String DELETE_FROM_BOOKINGS_WHERE_BOOKING_ID = "DELETE FROM bookings WHERE booking_id=?";
+    private static final String FROM_BOOKINGS_WHERE_USER_ID = "SELECT * FROM bookings WHERE user_id=?";
+    private static final String BOOKINGS_WHERE_SLOT_ID_AND_STATUS = "SELECT * FROM bookings WHERE slot_id=? AND status=?";
+    private static final String WHERE_USER_ID_AND_STATUS = "SELECT * FROM bookings WHERE user_id=? AND status=?";
     private final DataSource ds;
 
     public BookingDaoImpl(DataSource ds) {
@@ -25,7 +33,7 @@ public class BookingDaoImpl implements BookingDao {
 
             if (b.getBookingId() == 0) {
                 try (PreparedStatement ps = c.prepareStatement(
-                        "INSERT INTO bookings(user_id,slot_id,equipment_id,status,time_created) VALUES (?,?,?,?,?)",
+                        ID_STATUS_TIME_CREATED_VALUES,
                         Statement.RETURN_GENERATED_KEYS
                 )) {
                     ps.setInt(1, b.getUserId());
@@ -41,7 +49,7 @@ public class BookingDaoImpl implements BookingDao {
                 }
             } else {
                 try (PreparedStatement ps = c.prepareStatement(
-                        "UPDATE bookings SET status=? WHERE booking_id=?"
+                        STATUS_WHERE_BOOKING_ID
                 )) {
                     ps.setString(1, b.getStatus().name());
                     ps.setInt(2, b.getBookingId());
@@ -59,7 +67,7 @@ public class BookingDaoImpl implements BookingDao {
     @Override
     public Optional<Booking> findById(Integer id) {
         try (Connection c = ds.getConnection();
-             PreparedStatement ps = c.prepareStatement("SELECT * FROM bookings WHERE booking_id=?")) {
+             PreparedStatement ps = c.prepareStatement(WHERE_BOOKING_ID)) {
 
             ps.setInt(1, id);
 
@@ -77,7 +85,7 @@ public class BookingDaoImpl implements BookingDao {
     public List<Booking> findAll() {
         try (Connection c = ds.getConnection();
              Statement st = c.createStatement();
-             ResultSet rs = st.executeQuery("SELECT * FROM bookings")) {
+             ResultSet rs = st.executeQuery(FROM_BOOKINGS)) {
 
             List<Booking> list = new ArrayList<>();
             while (rs.next()) {
@@ -93,7 +101,7 @@ public class BookingDaoImpl implements BookingDao {
     @Override
     public void delete(Integer id) {
         try (Connection c = ds.getConnection();
-             PreparedStatement ps = c.prepareStatement("DELETE FROM bookings WHERE booking_id=?")) {
+             PreparedStatement ps = c.prepareStatement(DELETE_FROM_BOOKINGS_WHERE_BOOKING_ID)) {
 
             ps.setInt(1, id);
             ps.executeUpdate();
@@ -106,7 +114,7 @@ public class BookingDaoImpl implements BookingDao {
     @Override
     public List<Booking> findByUserId(int userId) {
         try (Connection c = ds.getConnection();
-             PreparedStatement ps = c.prepareStatement("SELECT * FROM bookings WHERE user_id=?")) {
+             PreparedStatement ps = c.prepareStatement(FROM_BOOKINGS_WHERE_USER_ID)) {
 
             ps.setInt(1, userId);
 
@@ -127,7 +135,7 @@ public class BookingDaoImpl implements BookingDao {
     public Optional<Booking> findActiveBookingBySlotId(int slotId) {
         try (Connection c = ds.getConnection();
              PreparedStatement ps = c.prepareStatement(
-                     "SELECT * FROM bookings WHERE slot_id=? AND status=?"
+                     BOOKINGS_WHERE_SLOT_ID_AND_STATUS
              )) {
 
             ps.setInt(1, slotId);
@@ -147,7 +155,7 @@ public class BookingDaoImpl implements BookingDao {
     public List<Booking> findActiveBookingsByUserId(int userId) {
         try (Connection c = ds.getConnection();
              PreparedStatement ps = c.prepareStatement(
-                     "SELECT * FROM bookings WHERE user_id=? AND status=?"
+                     WHERE_USER_ID_AND_STATUS
              )) {
 
             ps.setInt(1, userId);

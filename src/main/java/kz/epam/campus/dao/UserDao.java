@@ -4,7 +4,8 @@ import kz.epam.campus.model.User;
 
 import java.util.Optional;
 
-public interface UserDao extends DaoInterface<User, Integer> {
+public interface UserDao extends CommonDao<User, Integer> {
+
     Optional<User> findByEmail(String email);
 }
 

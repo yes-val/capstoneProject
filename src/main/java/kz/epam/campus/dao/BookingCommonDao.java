@@ -5,7 +5,7 @@ import kz.epam.campus.model.Booking;
 import java.util.List;
 import java.util.Optional;
 
-public interface BookingDao extends DaoInterface<Booking, Integer> {
+public interface BookingCommonDao extends CommonDao<Booking, Integer> {
 
     List<Booking> findByUserId(int userId);
 

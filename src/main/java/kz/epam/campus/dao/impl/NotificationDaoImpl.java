@@ -15,6 +15,16 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class NotificationDaoImpl implements NotificationDao {
 
+    public static final String SELECT_FROM_NOTIFICATIONS_WHERE_USER_ID = "SELECT * FROM notifications WHERE user_id=?";
+    public static final String USER_ID_BOOKING_ID_STATUS_TIME_SENT_VALUES = """
+            INSERT INTO notifications
+            (user_id,booking_id,status,time_sent)
+            VALUES (?,?,?,?)
+            """;
+    public static final String TIME_SENT_WHERE_NOTIFICATION_ID = "UPDATE notifications SET status=?, time_sent=? WHERE notification_id=?";
+    public static final String WHERE_NOTIFICATION_ID = "SELECT * FROM notifications WHERE notification_id=?";
+    public static final String SELECT_FROM_NOTIFICATIONS = "SELECT * FROM notifications";
+    public static final String NOTIFICATIONS_WHERE_NOTIFICATION_ID = "DELETE FROM notifications WHERE notification_id=?";
     private final DataSource ds;
 
     public NotificationDaoImpl(DataSource ds) {
@@ -25,7 +35,7 @@ public class NotificationDaoImpl implements NotificationDao {
     public List<Notification> findByUserId(int userId) {
 
         try (Connection c = ds.getConnection();
-             PreparedStatement ps = c.prepareStatement("SELECT * FROM notifications WHERE user_id=?")) {
+             PreparedStatement ps = c.prepareStatement(SELECT_FROM_NOTIFICATIONS_WHERE_USER_ID)) {
 
             ps.setInt(1, userId);
 
@@ -50,11 +60,7 @@ public class NotificationDaoImpl implements NotificationDao {
             if (notification.getNotificationId() == 0) {
 
                 try (PreparedStatement ps = c.prepareStatement(
-                        """
-                                INSERT INTO notifications
-                                (user_id,booking_id,status,time_sent)
-                                VALUES (?,?,?,?)
-                                """,
+                        USER_ID_BOOKING_ID_STATUS_TIME_SENT_VALUES,
                         Statement.RETURN_GENERATED_KEYS
                 )) {
                     ps.setInt(1, notification.getUserId());
@@ -72,7 +78,7 @@ public class NotificationDaoImpl implements NotificationDao {
                 }
             } else {
                 try (PreparedStatement ps = c.prepareStatement(
-                        "UPDATE notifications SET status=?, time_sent=? WHERE notification_id=?"
+                        TIME_SENT_WHERE_NOTIFICATION_ID
                 )) {
                     ps.setString(1, notification.getStatus().name());
                     ps.setTimestamp(2, Timestamp.valueOf(notification.getTimeSent()));
@@ -93,7 +99,7 @@ public class NotificationDaoImpl implements NotificationDao {
     public Optional<Notification> findById(Integer id) {
 
         try (Connection c = ds.getConnection();
-             PreparedStatement ps = c.prepareStatement("SELECT * FROM notifications WHERE notification_id=?")) {
+             PreparedStatement ps = c.prepareStatement(WHERE_NOTIFICATION_ID)) {
 
             ps.setInt(1, id);
 
@@ -114,7 +120,7 @@ public class NotificationDaoImpl implements NotificationDao {
 
         try (Connection c = ds.getConnection();
              Statement st = c.createStatement();
-             ResultSet rs = st.executeQuery("SELECT * FROM notifications")) {
+             ResultSet rs = st.executeQuery(SELECT_FROM_NOTIFICATIONS)) {
 
             List<Notification> list = new ArrayList<>();
 
@@ -133,7 +139,7 @@ public class NotificationDaoImpl implements NotificationDao {
     public void delete(Integer id) {
 
         try (Connection c = ds.getConnection();
-             PreparedStatement ps = c.prepareStatement("DELETE FROM notifications WHERE notification_id=?")) {
+             PreparedStatement ps = c.prepareStatement(NOTIFICATIONS_WHERE_NOTIFICATION_ID)) {
 
             ps.setInt(1, id);
             ps.executeUpdate();

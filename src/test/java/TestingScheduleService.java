@@ -1,4 +1,4 @@
-import kz.epam.campus.dao.BookingDao;
+import kz.epam.campus.dao.BookingCommonDao;
 import kz.epam.campus.dao.ScheduleDao;
 import kz.epam.campus.dao.SlotDao;
 import kz.epam.campus.dao.UserDao;
@@ -37,7 +37,7 @@ public class TestingScheduleService {
     private SlotDao slotDao;
 
     @Mock
-    private BookingDao bookingDao;
+    private BookingCommonDao bookingDao;
 
     @Mock
     private UserDao userDao;

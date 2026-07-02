@@ -5,7 +5,8 @@ import kz.epam.campus.model.Slot;
 import java.time.LocalDate;
 import java.util.List;
 
-public interface SlotDao extends DaoInterface<Slot, Integer> {
+public interface SlotDao extends CommonDao<Slot, Integer> {
+
     List<Slot> findByEquipmentIdAndDate(int equipmentId, LocalDate date);
 
     List<Slot> findUnbookedByEquipmentIdAndDate(int equipmentId, LocalDate date);

@@ -1,4 +1,4 @@
-import kz.epam.campus.dao.BookingDao;
+import kz.epam.campus.dao.BookingCommonDao;
 import kz.epam.campus.dao.EquipmentDao;
 import kz.epam.campus.dao.SlotDao;
 import kz.epam.campus.model.Booking;
@@ -31,7 +31,7 @@ import static org.mockito.Mockito.*;
 public class TestingBookingService {
 
     @Mock
-    private BookingDao bookingDao;
+    private BookingCommonDao bookingDao;
 
     @Mock
     private SlotDao slotDao;
