@@ -55,7 +55,11 @@
     <button type="submit"><%= MessageHelper.msg(getServletContext(), locale, "profile.save_button") %></button>
 </form>
 
-<p><a href="/bookings"><%= MessageHelper.msg(getServletContext(), locale, "profile.back_link") %></a></p>
+<% if (user.getPosition().name().equals("ADMIN")) { %>
+    <p><a href="/admin/equipment"><%= MessageHelper.msg(getServletContext(), locale, "admin.nav.equipment") %></a></p>
+<% } else { %>
+    <p><a href="/bookings"><%= MessageHelper.msg(getServletContext(), locale, "profile.back_link") %></a></p>
+<% } %>
 
 </body>
 </html>
