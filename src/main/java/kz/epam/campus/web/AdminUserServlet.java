@@ -16,6 +16,8 @@ import java.util.List;
 @WebServlet("/admin/users/*")
 public class AdminUserServlet extends HttpServlet {
 
+    private static final int PAGE_SIZE = 10;
+
     private UserService userService;
     private SecurityService securityService;
 
@@ -35,8 +37,23 @@ public class AdminUserServlet extends HttpServlet {
             return;
         }
 
-        List<User> userList = userService.getAllUsers();
+        int page = 1;
+        String p = req.getParameter("page");
+        if (p != null && !p.isEmpty()) {
+            try {
+                page = Integer.parseInt(p);
+                if (page < 1) page = 1;
+            } catch (NumberFormatException ignored) {}
+        }
+
+        List<User> userList = userService.getAllUsers(page, PAGE_SIZE);
+        int totalUsers = userService.countAllUsers();
+        int totalPages = (int) Math.ceil((double) totalUsers / PAGE_SIZE);
+        if (totalPages < 1) totalPages = 1;
+
         req.setAttribute("userList", userList);
+        req.setAttribute("currentPage", page);
+        req.setAttribute("totalPages", totalPages);
         req.getRequestDispatcher("/WEB-INF/views/admin-users.jsp").forward(req, resp);
     }
 

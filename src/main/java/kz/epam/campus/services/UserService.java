@@ -16,6 +16,10 @@ public interface UserService {
 
     List<User> getAllUsers();
 
+    List<User> getAllUsers(int page, int pageSize);
+
+    int countAllUsers();
+
     void deactivateUser(int userId);
     void updateProfile(User user, boolean passwordChanged);
 }

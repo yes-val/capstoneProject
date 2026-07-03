@@ -46,6 +46,15 @@ public class UserServiceImpl implements UserService {
         return userDao.findAll();
     }
 
+    public List<User> getAllUsers(int page, int pageSize) {
+        int offset = (page - 1) * pageSize;
+        return userDao.findAll(offset, pageSize);
+    }
+
+    public int countAllUsers() {
+        return userDao.countAll();
+    }
+
     public void deactivateUser(int userId) {
         User user = userDao.findById(userId)
                 .orElseThrow(() -> new BookingException("User not found"));

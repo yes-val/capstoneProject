@@ -107,6 +107,37 @@ public class UserCommonDaoImpl implements UserDao {
         }
     }
 
+    public List<User> findAll(int offset, int limit) {
+        try (Connection c = ds.getConnection();
+             PreparedStatement ps = c.prepareStatement("SELECT * FROM users LIMIT ? OFFSET ?")) {
+
+            ps.setInt(1, limit);
+            ps.setInt(2, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                List<User> list = new ArrayList<>();
+                while (rs.next()) list.add(map(rs));
+                return list;
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public int countAll() {
+        try (Connection c = ds.getConnection();
+             PreparedStatement ps = c.prepareStatement("SELECT COUNT(*) FROM users");
+             ResultSet rs = ps.executeQuery()) {
+
+            rs.next();
+            return rs.getInt(1);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void delete(Integer id) {
         try (Connection c = ds.getConnection();
              PreparedStatement ps = c.prepareStatement("DELETE FROM users WHERE user_id=?")) {

@@ -58,6 +58,31 @@
     </ul>
 <% } %>
 
+<%
+    Integer currentPage = (Integer) request.getAttribute("currentPage");
+    Integer totalPages = (Integer) request.getAttribute("totalPages");
+    String pagePrefix = MessageHelper.langQueryPrefix(request);
+%>
+<p>
+    <% if (currentPage > 1) { %>
+        <a href="<%= pagePrefix %>page=<%= currentPage - 1 %>">
+            <%= MessageHelper.msg(getServletContext(), locale, "pagination.previous") %>
+        </a>
+    <% } %>
+    <% for (int i = 1; i <= totalPages; i++) { %>
+        <% if (i == currentPage) { %>
+            <strong><%= i %></strong>
+        <% } else { %>
+            <a href="<%= pagePrefix %>page=<%= i %>"><%= i %></a>
+        <% } %>
+    <% } %>
+    <% if (currentPage < totalPages) { %>
+        <a href="<%= pagePrefix %>page=<%= currentPage + 1 %>">
+            <%= MessageHelper.msg(getServletContext(), locale, "pagination.next") %>
+        </a>
+    <% } %>
+</p>
+
 <p>
     <a href="/admin/equipment"><%= MessageHelper.msg(getServletContext(), locale, "admin.nav.equipment") %></a> |
     <a href="/admin/schedule"><%= MessageHelper.msg(getServletContext(), locale, "admin.nav.schedule") %></a> |
