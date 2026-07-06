@@ -38,7 +38,11 @@ public class DataSeeder {
         equipment.setActive(true);
         equipmentService.createEquipment(equipment);
 
-        slotService.generateSlotsForDate(LocalDate.now());
+        LocalDate start = LocalDate.now();
+        LocalDate end = start.plusDays(13);
+        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+            slotService.generateSlotsForDate(date);
+        }
 
         if (userService.emailExists("admin@lab.local")) {
             return;

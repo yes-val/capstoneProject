@@ -6,8 +6,8 @@ import kz.epam.campus.model.BookingStatus;
 import kz.epam.campus.model.Equipment;
 import kz.epam.campus.model.Slot;
 import kz.epam.campus.services.BookingException;
-import kz.epam.campus.services.BookingService;
 import kz.epam.campus.services.ScheduleService;
+import kz.epam.campus.services.impl.BookingServiceImpl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +43,7 @@ public class TestingBookingService {
     private ScheduleService scheduleService;
 
     @InjectMocks
-    private BookingService bookingService;
+    private BookingServiceImpl bookingService;
 
     private static final int USER_ID = 1;
     private static final int OTHER_USER_ID = 2;
@@ -83,13 +83,9 @@ public class TestingBookingService {
         return booking;
     }
 
-    // ---------------------------------------------------------------
-    // createBooking - happy path
-    // ---------------------------------------------------------------
-
     @Test
-    void createBooking_success_whenAllValidationsPass() {
-        // GIVEN
+    void shouldCreateBookingWhenValidationPass() {
+
         when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.of(equipment(true)));
         when(scheduleService.isWorkingDay(bookingDate)).thenReturn(true);
         when(slotDao.findById(SLOT_ID)).thenReturn(Optional.of(slot(SLOT_ID, EQUIPMENT_ID, bookingDate, LocalTime.of(10, 0))));
@@ -97,10 +93,10 @@ public class TestingBookingService {
         when(bookingDao.findActiveBookingsByUserId(USER_ID)).thenReturn(List.of());
         when(bookingDao.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // WHEN
+
         Booking result = bookingService.createBooking(USER_ID, EQUIPMENT_ID, SLOT_ID, bookingDate);
 
-        // THEN
+
         ArgumentCaptor<Booking> captor = ArgumentCaptor.forClass(Booking.class);
         verify(bookingDao).save(captor.capture());
         assertEquals(USER_ID, captor.getValue().getUserId());
@@ -110,45 +106,29 @@ public class TestingBookingService {
         assertEquals(BookingStatus.CONFIRMED, result.getStatus());
     }
 
-    // ---------------------------------------------------------------
-    // Rule 1: equipment availability
-    // ---------------------------------------------------------------
-
     @Test
-    void createBooking_throwsException_whenEquipmentNotFound() {
-        // GIVEN
+    void shouldThrowExceptionWhenEquipmentNotFound() {
         when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.empty());
 
-        // WHEN
         BookingException exception = assertThrows(BookingException.class,
                 () -> bookingService.createBooking(USER_ID, EQUIPMENT_ID, SLOT_ID, bookingDate));
 
-        // THEN
         verify(bookingDao, never()).save(any());
         assertEquals("Sorry, equipment not available", exception.getMessage());
     }
 
     @Test
-    void createBooking_throwsException_whenEquipmentInactive() {
-        // GIVEN
+    void shouldThrowExceptionWhenEquipmentIsInactive() {
         when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.of(equipment(false)));
 
-        // WHEN
         BookingException exception = assertThrows(BookingException.class,
                 () -> bookingService.createBooking(USER_ID, EQUIPMENT_ID, SLOT_ID, bookingDate));
-
-        // THEN
         verify(bookingDao, never()).save(any());
         assertEquals("Sorry, equipment not available", exception.getMessage());
     }
 
-    // ---------------------------------------------------------------
-    // Rule 2: advance booking limit (2 weeks)
-    // ---------------------------------------------------------------
-
     @Test
-    void createBooking_success_whenDateIsExactlyAtTwoWeekLimit() {
-        // GIVEN
+    void shouldCreateBookingWhenDateIsAtTwoWeekLimit() {
         LocalDate currentWeekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate latestAllowedDate = currentWeekStart.plusDays(13);
 
@@ -159,116 +139,86 @@ public class TestingBookingService {
         when(bookingDao.findActiveBookingsByUserId(USER_ID)).thenReturn(List.of());
         when(bookingDao.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // WHEN
         Booking result = bookingService.createBooking(USER_ID, EQUIPMENT_ID, SLOT_ID, latestAllowedDate);
 
-        // THEN
         verify(bookingDao).save(any(Booking.class));
         assertEquals(BookingStatus.CONFIRMED, result.getStatus());
     }
 
     @Test
-    void createBooking_throwsException_whenDateExceedsTwoWeekLimit() {
-        // GIVEN
+    void shouldThrowExceptionWhenDateExceedsTwoWeekLimit() {
+
         LocalDate currentWeekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate tooFarDate = currentWeekStart.plusDays(14);
 
         when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.of(equipment(true)));
 
-        // WHEN
+
         BookingException exception = assertThrows(BookingException.class,
                 () -> bookingService.createBooking(USER_ID, EQUIPMENT_ID, SLOT_ID, tooFarDate));
 
-        // THEN
+
         verify(bookingDao, never()).save(any());
         assertEquals("Cannot book more than 2 weeks in advance", exception.getMessage());
     }
 
-    // ---------------------------------------------------------------
-    // Rule 3: lab must be open on the requested date
-    // ---------------------------------------------------------------
 
     @Test
-    void createBooking_throwsException_whenLabIsClosedOnDate() {
-        // GIVEN
+    void shouldThrowExceptionWhenLabIsClosed() {
         when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.of(equipment(true)));
         when(scheduleService.isWorkingDay(bookingDate)).thenReturn(false);
 
-        // WHEN
         BookingException exception = assertThrows(BookingException.class,
                 () -> bookingService.createBooking(USER_ID, EQUIPMENT_ID, SLOT_ID, bookingDate));
 
-        // THEN
         verify(bookingDao, never()).save(any());
         assertEquals("Lab is closed on this date", exception.getMessage());
     }
 
-    // ---------------------------------------------------------------
-    // Rule 4: slot must exist and match the equipment/date
-    // ---------------------------------------------------------------
-
     @Test
-    void createBooking_throwsException_whenSlotNotFound() {
-        // GIVEN
+    void shouldThrowExceptionWhenSlotNotFound() {
         when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.of(equipment(true)));
         when(scheduleService.isWorkingDay(bookingDate)).thenReturn(true);
         when(slotDao.findById(SLOT_ID)).thenReturn(Optional.empty());
 
-        // WHEN
         BookingException exception = assertThrows(BookingException.class,
                 () -> bookingService.createBooking(USER_ID, EQUIPMENT_ID, SLOT_ID, bookingDate));
 
-        // THEN
         verify(bookingDao, never()).save(any());
         assertEquals("Slot not available", exception.getMessage());
     }
 
     @Test
-    void createBooking_throwsException_whenSlotDoesNotMatchEquipment() {
-        // GIVEN
+    void shouldThrowExceptionWhenSlotDoesNotMatchEquipment() {
         int mismatchedEquipmentId = 999;
         when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.of(equipment(true)));
         when(scheduleService.isWorkingDay(bookingDate)).thenReturn(true);
         when(slotDao.findById(SLOT_ID)).thenReturn(Optional.of(slot(SLOT_ID, mismatchedEquipmentId, bookingDate, LocalTime.of(10, 0))));
 
-        // WHEN
         BookingException exception = assertThrows(BookingException.class,
                 () -> bookingService.createBooking(USER_ID, EQUIPMENT_ID, SLOT_ID, bookingDate));
 
-        // THEN
         verify(bookingDao, never()).save(any());
         assertEquals("Slot not available", exception.getMessage());
     }
 
-    // ---------------------------------------------------------------
-    // Rule 5: slot must not already be booked
-    // ---------------------------------------------------------------
-
     @Test
-    void createBooking_throwsException_whenSlotAlreadyBooked() {
-        // GIVEN
+    void shouldThrowExceptionWhenSlotAlreadyBooked() {
         when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.of(equipment(true)));
         when(scheduleService.isWorkingDay(bookingDate)).thenReturn(true);
         when(slotDao.findById(SLOT_ID)).thenReturn(Optional.of(slot(SLOT_ID, EQUIPMENT_ID, bookingDate, LocalTime.of(10, 0))));
         when(bookingDao.findActiveBookingBySlotId(SLOT_ID))
                 .thenReturn(Optional.of(booking(BOOKING_ID, OTHER_USER_ID, SLOT_ID, BookingStatus.CONFIRMED)));
 
-        // WHEN
         BookingException exception = assertThrows(BookingException.class,
                 () -> bookingService.createBooking(USER_ID, EQUIPMENT_ID, SLOT_ID, bookingDate));
 
-        // THEN
         verify(bookingDao, never()).save(any());
         assertEquals("Slot already booked", exception.getMessage());
     }
 
-    // ---------------------------------------------------------------
-    // Rule 6: user cannot have overlapping bookings
-    // ---------------------------------------------------------------
-
     @Test
-    void createBooking_throwsException_whenUserHasOverlappingBooking() {
-        // GIVEN
+    void shouldThrowExceptionWhenUserHasOverlappingBooking() {
         int existingSlotId = 205;
         when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.of(equipment(true)));
         when(scheduleService.isWorkingDay(bookingDate)).thenReturn(true);
@@ -278,18 +228,15 @@ public class TestingBookingService {
                 .thenReturn(List.of(booking(2000, USER_ID, existingSlotId, BookingStatus.CONFIRMED)));
         when(slotDao.findById(existingSlotId)).thenReturn(Optional.of(slot(existingSlotId, EQUIPMENT_ID, bookingDate, LocalTime.of(10, 0))));
 
-        // WHEN
         BookingException exception = assertThrows(BookingException.class,
                 () -> bookingService.createBooking(USER_ID, EQUIPMENT_ID, SLOT_ID, bookingDate));
 
-        // THEN
         verify(bookingDao, never()).save(any());
         assertEquals("You already have a booking at this time", exception.getMessage());
     }
 
     @Test
-    void createBooking_success_whenExistingBookingSameDayDoesNotOverlap() {
-        // GIVEN
+    void shouldCreateBookingWhenExistingBookingSameDayDoesNotOverlap() {
         int existingSlotId = 206;
         when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.of(equipment(true)));
         when(scheduleService.isWorkingDay(bookingDate)).thenReturn(true);
@@ -300,21 +247,14 @@ public class TestingBookingService {
         when(slotDao.findById(existingSlotId)).thenReturn(Optional.of(slot(existingSlotId, EQUIPMENT_ID, bookingDate, LocalTime.of(14, 0))));
         when(bookingDao.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // WHEN
         Booking result = bookingService.createBooking(USER_ID, EQUIPMENT_ID, SLOT_ID, bookingDate);
 
-        // THEN
         verify(bookingDao).save(any(Booking.class));
         assertEquals(BookingStatus.CONFIRMED, result.getStatus());
     }
 
-    // ---------------------------------------------------------------
-    // Rule 7: at most 2 active bookings per week
-    // ---------------------------------------------------------------
-
     @Test
-    void createBooking_throwsException_whenWeeklyLimitReached() {
-        // GIVEN
+    void shouldThrowExceptionWhenWeeklyLimitReached() {
         int existingSlotId1 = 300;
         int existingSlotId2 = 301;
         when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.of(equipment(true)));
@@ -327,18 +267,15 @@ public class TestingBookingService {
         when(slotDao.findById(existingSlotId1)).thenReturn(Optional.of(slot(existingSlotId1, EQUIPMENT_ID, bookingDate, LocalTime.of(14, 0))));
         when(slotDao.findById(existingSlotId2)).thenReturn(Optional.of(slot(existingSlotId2, EQUIPMENT_ID, bookingDate.plusDays(1), LocalTime.of(9, 0))));
 
-        // WHEN
         BookingException exception = assertThrows(BookingException.class,
                 () -> bookingService.createBooking(USER_ID, EQUIPMENT_ID, SLOT_ID, bookingDate));
 
-        // THEN
         verify(bookingDao, never()).save(any());
         assertEquals("You have reached the limit of 2 bookings per week", exception.getMessage());
     }
 
     @Test
-    void createBooking_success_whenUnderWeeklyLimit() {
-        // GIVEN
+    void shouldCreateBookingWhenUnderWeeklyLimit() {
         int existingSlotId = 302;
         when(equipmentDao.findById(EQUIPMENT_ID)).thenReturn(Optional.of(equipment(true)));
         when(scheduleService.isWorkingDay(bookingDate)).thenReturn(true);
@@ -350,93 +287,68 @@ public class TestingBookingService {
                 .thenReturn(Optional.of(slot(existingSlotId, EQUIPMENT_ID, bookingDate.plusDays(1), LocalTime.of(9, 0))));
         when(bookingDao.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // WHEN
         Booking result = bookingService.createBooking(USER_ID, EQUIPMENT_ID, SLOT_ID, bookingDate);
 
-        // THEN
         verify(bookingDao).save(any(Booking.class));
         assertEquals(BookingStatus.CONFIRMED, result.getStatus());
     }
 
-    // ---------------------------------------------------------------
-    // cancelBooking
-    // ---------------------------------------------------------------
-
     @Test
-    void cancelBooking_success_whenOwnedAndConfirmed() {
-        // GIVEN
+    void shouldCancelBookingWhenOwnedAndConfirmed() {
         Booking existing = booking(BOOKING_ID, USER_ID, SLOT_ID, BookingStatus.CONFIRMED);
         when(bookingDao.findById(BOOKING_ID)).thenReturn(Optional.of(existing));
 
-        // WHEN
         bookingService.cancelBooking(BOOKING_ID, USER_ID);
 
-        // THEN
         ArgumentCaptor<Booking> captor = ArgumentCaptor.forClass(Booking.class);
         verify(bookingDao).save(captor.capture());
         assertEquals(BookingStatus.CANCELLED, captor.getValue().getStatus());
     }
 
     @Test
-    void cancelBooking_throwsException_whenBookingNotFound() {
-        // GIVEN
+    void shouldThrowExceptionWhenBookingNotFound() {
         when(bookingDao.findById(BOOKING_ID)).thenReturn(Optional.empty());
 
-        // WHEN
         BookingException exception = assertThrows(BookingException.class,
                 () -> bookingService.cancelBooking(BOOKING_ID, USER_ID));
 
-        // THEN
         verify(bookingDao, never()).save(any());
         assertEquals("Booking not found", exception.getMessage());
     }
 
     @Test
-    void cancelBooking_throwsException_whenUserIsNotOwner() {
-        // GIVEN
+    void shouldThrowExceptionWhenUserIsNotOwner() {
         Booking existing = booking(BOOKING_ID, USER_ID, SLOT_ID, BookingStatus.CONFIRMED);
         when(bookingDao.findById(BOOKING_ID)).thenReturn(Optional.of(existing));
 
-        // WHEN
         BookingException exception = assertThrows(BookingException.class,
                 () -> bookingService.cancelBooking(BOOKING_ID, OTHER_USER_ID));
 
-        // THEN
         verify(bookingDao, never()).save(any());
         assertEquals("You can only cancel your own bookings", exception.getMessage());
     }
 
     @Test
-    void cancelBooking_throwsException_whenBookingNotConfirmed() {
-        // GIVEN
+    void shouldThrowExceptionWhenBookingNotConfirmed() {
         Booking existing = booking(BOOKING_ID, USER_ID, SLOT_ID, BookingStatus.CANCELLED);
         when(bookingDao.findById(BOOKING_ID)).thenReturn(Optional.of(existing));
 
-        // WHEN
         BookingException exception = assertThrows(BookingException.class,
                 () -> bookingService.cancelBooking(BOOKING_ID, USER_ID));
 
-        // THEN
         verify(bookingDao, never()).save(any());
         assertEquals("Only confirmed bookings can be cancelled", exception.getMessage());
     }
 
-    // ---------------------------------------------------------------
-    // getUserBookings
-    // ---------------------------------------------------------------
-
     @Test
-    void getUserBookings_returnsBookingsFromDao() {
-        // GIVEN
+    void shouldReturnBookingsFromDao() {
         List<Booking> expected = List.of(
                 booking(1, USER_ID, SLOT_ID, BookingStatus.CONFIRMED),
                 booking(2, USER_ID, SLOT_ID + 1, BookingStatus.CANCELLED));
         when(bookingDao.findByUserId(USER_ID)).thenReturn(expected);
 
-        // WHEN
         List<Booking> result = bookingService.getUserBookings(USER_ID);
 
-        // THEN
         verify(bookingDao).findByUserId(USER_ID);
         assertEquals(expected, result);
     }

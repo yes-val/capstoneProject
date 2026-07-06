@@ -11,7 +11,7 @@ public class UserServiceTest extends BaseDbTest {
             ctx.getBean(UserService.class);
 
     @Test
-    void registerUser_success() {
+    void shouldRegisterUser() {
         User u = new User();
         u.setName("John");
         u.setEmail("john@test.com");
@@ -25,7 +25,7 @@ public class UserServiceTest extends BaseDbTest {
     }
 
     @Test
-    void authenticate_success() {
+    void shouldAuthenticate() {
         userService.register(createUser());
 
         assertTrue(
@@ -34,7 +34,7 @@ public class UserServiceTest extends BaseDbTest {
     }
 
     @Test
-    void authenticate_fail_wrongPassword() {
+    void shouldFailAuthenticationWithWrongPassword() {
         userService.register(createUser());
 
         assertTrue(

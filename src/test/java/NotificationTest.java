@@ -62,14 +62,14 @@ public class NotificationTest extends BaseDbTest {
     }
 
     @Test
-    void sendConfirmation_success() {
+    void shouldSendConfirmation() {
         assertDoesNotThrow(() ->
                 notificationService.sendConfirmation(userId, bookingId, "test@example.com")
         );
     }
 
     @Test
-    void sendCancellation_success() {
+    void shouldSendCancellation() {
         assertDoesNotThrow(() ->
                 notificationService.sendCancellation(userId, bookingId, "test@example.com")
         );

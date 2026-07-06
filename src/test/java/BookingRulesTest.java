@@ -61,7 +61,7 @@ public class BookingRulesTest extends BaseDbTest {
     }
 
     @Test
-    void createBooking_rejectsInactiveEquipment() {
+    void shouldRejectInactiveEquipment() {
 
         EquipmentDao equipmentDao = ctx.getBean(EquipmentDao.class);
         Equipment equipment = equipmentDao.findById(equipmentId).orElseThrow();
@@ -78,7 +78,7 @@ public class BookingRulesTest extends BaseDbTest {
     }
 
     @Test
-    void createBooking_rejectsTooFarInAdvance() {
+    void shouldRejectBookingTooFarInAdvance() {
 
         LocalDate currentWeekStart = LocalDate.now()
                 .with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
@@ -97,7 +97,7 @@ public class BookingRulesTest extends BaseDbTest {
     }
 
     @Test
-    void createBooking_rejectsHoliday() {
+    void shouldRejectBookingOnHoliday() {
 
         scheduleService.setHoliday(LocalDate.now());
 
@@ -111,7 +111,7 @@ public class BookingRulesTest extends BaseDbTest {
     }
 
     @Test
-    void createBooking_rejectsSlotEquipmentMismatch() {
+    void shouldRejectSlotEquipmentMismatch() {
 
         EquipmentDao equipmentDao = ctx.getBean(EquipmentDao.class);
         Equipment otherEquipment = new Equipment();
@@ -133,7 +133,7 @@ public class BookingRulesTest extends BaseDbTest {
     }
 
     @Test
-    void createBooking_rejectsAlreadyBookedSlot() {
+    void shouldRejectAlreadyBookedSlot() {
 
         Slot slot = todaySlots.get(0);
 
@@ -156,7 +156,7 @@ public class BookingRulesTest extends BaseDbTest {
     }
 
     @Test
-    void createBooking_rejectsOverlappingTimeForSameUser() {
+    void shouldRejectOverlappingTimeForSameUser() {
 
         Slot firstSlot = todaySlots.get(0);
         bookingService.createBooking(userId, equipmentId, firstSlot.getSlotId(), LocalDate.now());
@@ -185,7 +185,7 @@ public class BookingRulesTest extends BaseDbTest {
     }
 
     @Test
-    void createBooking_rejectsThirdBookingInSameWeek() {
+    void shouldRejectThirdBookingInSameWeek() {
 
         bookingService.createBooking(userId, equipmentId, todaySlots.get(0).getSlotId(), LocalDate.now());
         bookingService.createBooking(userId, equipmentId, todaySlots.get(1).getSlotId(), LocalDate.now());
@@ -198,7 +198,7 @@ public class BookingRulesTest extends BaseDbTest {
     }
 
     @Test
-    void cancelBooking_rejectsWrongUser() {
+    void shouldRejectCancelByWrongUser() {
 
         Booking booking = bookingService.createBooking(userId, equipmentId, todaySlots.get(0).getSlotId(), LocalDate.now());
 
@@ -219,7 +219,7 @@ public class BookingRulesTest extends BaseDbTest {
     }
 
     @Test
-    void cancelBooking_rejectsAlreadyCancelled() {
+    void shouldRejectCancelWhenAlreadyCancelled() {
 
         Booking booking = bookingService.createBooking(userId, equipmentId, todaySlots.get(0).getSlotId(), LocalDate.now());
         bookingService.cancelBooking(booking.getBookingId(), userId);
@@ -232,7 +232,7 @@ public class BookingRulesTest extends BaseDbTest {
     }
 
     @Test
-    void setHoliday_cancelsExistingBookingsForThatDate() {
+    void shouldCancelExistingBookingsForThatDateWhenSettingHoliday() {
 
         Booking booking = bookingService.createBooking(userId, equipmentId, todaySlots.get(0).getSlotId(), LocalDate.now());
         assertEquals(BookingStatus.CONFIRMED, booking.getStatus());

@@ -9,7 +9,7 @@ import kz.epam.campus.model.Slot;
 import kz.epam.campus.model.User;
 import kz.epam.campus.services.LabHours;
 import kz.epam.campus.services.NotificationService;
-import kz.epam.campus.services.ScheduleService;
+import kz.epam.campus.services.impl.ScheduleServiceImpl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,7 +46,7 @@ public class TestingScheduleService {
     private NotificationService notificationService;
 
     @InjectMocks
-    private ScheduleService scheduleService;
+    private ScheduleServiceImpl scheduleService;
 
     private LocalDate date;
 
@@ -88,64 +88,44 @@ public class TestingScheduleService {
         return user;
     }
 
-    // ---------------------------------------------------------------
-    // isWorkingDay
-    // ---------------------------------------------------------------
-
     @Test
-    void isWorkingDay_returnsTrue_whenScheduleMarkedAsWorkingDay() {
-        // GIVEN
+    void shouldReturnTrueWhenScheduleMarkedAsWorkingDay() {
         when(scheduleDao.findByDate(date)).thenReturn(Optional.of(
                 schedule(1, date, true, LabHours.DEFAULT_START, LabHours.DEFAULT_END)));
 
-        // WHEN
         boolean result = scheduleService.isWorkingDay(date);
 
-        // THEN
         verify(scheduleDao).findByDate(date);
         assertTrue(result);
     }
 
     @Test
-    void isWorkingDay_returnsFalse_whenScheduleMarkedAsHoliday() {
-        // GIVEN
+    void shouldReturnFalseWhenScheduleMarkedAsHoliday() {
         when(scheduleDao.findByDate(date)).thenReturn(Optional.of(
                 schedule(1, date, false, LocalTime.MIDNIGHT, LocalTime.MIDNIGHT)));
 
-        // WHEN
         boolean result = scheduleService.isWorkingDay(date);
 
-        // THEN
         verify(scheduleDao).findByDate(date);
         assertFalse(result);
     }
 
     @Test
-    void isWorkingDay_defaultsToTrue_whenNoScheduleExists() {
-        // GIVEN
+    void shouldDefaultToTrueWhenNoScheduleExists() {
         when(scheduleDao.findByDate(date)).thenReturn(Optional.empty());
 
-        // WHEN
         boolean result = scheduleService.isWorkingDay(date);
 
-        // THEN
         verify(scheduleDao).findByDate(date);
         assertTrue(result);
     }
 
-    // ---------------------------------------------------------------
-    // setWorkingDay
-    // ---------------------------------------------------------------
-
     @Test
-    void setWorkingDay_createsScheduleWithDefaultHours_whenNoneExists() {
-        // GIVEN
+    void shouldCreateScheduleWithDefaultHoursWhenNoneExists() {
         when(scheduleDao.findByDate(date)).thenReturn(Optional.empty());
 
-        // WHEN
         scheduleService.setWorkingDay(date);
 
-        // THEN
         ArgumentCaptor<Schedule> captor = ArgumentCaptor.forClass(Schedule.class);
         verify(scheduleDao).save(captor.capture());
         assertEquals(date, captor.getValue().getDate());
@@ -155,36 +135,26 @@ public class TestingScheduleService {
     }
 
     @Test
-    void setWorkingDay_withExplicitHours_setsGivenStartAndEnd() {
-        // GIVEN
+    void shouldSetGivenStartAndEndWithExplicitHours() {
         LocalTime start = LocalTime.of(8, 0);
         LocalTime end = LocalTime.of(12, 0);
         when(scheduleDao.findByDate(date)).thenReturn(Optional.empty());
 
-        // WHEN
         scheduleService.setWorkingDay(date, start, end);
 
-        // THEN
         ArgumentCaptor<Schedule> captor = ArgumentCaptor.forClass(Schedule.class);
         verify(scheduleDao).save(captor.capture());
         assertEquals(start, captor.getValue().getTimeStart());
         assertEquals(end, captor.getValue().getTimeEnd());
     }
 
-    // ---------------------------------------------------------------
-    // setHoliday
-    // ---------------------------------------------------------------
-
     @Test
-    void setHoliday_newSchedule_setsMidnightPlaceholderHours() {
-        // GIVEN
+    void shouldSetMidnightPlaceholderHoursForNewSchedule() {
         when(scheduleDao.findByDate(date)).thenReturn(Optional.empty());
         when(slotDao.findAll()).thenReturn(List.of());
 
-        // WHEN
         scheduleService.setHoliday(date);
 
-        // THEN
         ArgumentCaptor<Schedule> captor = ArgumentCaptor.forClass(Schedule.class);
         verify(scheduleDao).save(captor.capture());
         assertFalse(captor.getValue().isWorkingDay());
@@ -193,18 +163,15 @@ public class TestingScheduleService {
     }
 
     @Test
-    void setHoliday_existingSchedule_keepsExistingHoursUnchanged() {
-        // GIVEN
+    void shouldKeepExistingHoursUnchangedForExistingSchedule() {
         LocalTime existingStart = LocalTime.of(9, 0);
         LocalTime existingEnd = LocalTime.of(18, 0);
         when(scheduleDao.findByDate(date)).thenReturn(Optional.of(
                 schedule(5, date, true, existingStart, existingEnd)));
         when(slotDao.findAll()).thenReturn(List.of());
 
-        // WHEN
         scheduleService.setHoliday(date);
 
-        // THEN
         ArgumentCaptor<Schedule> captor = ArgumentCaptor.forClass(Schedule.class);
         verify(scheduleDao).save(captor.capture());
         assertFalse(captor.getValue().isWorkingDay());
@@ -213,8 +180,7 @@ public class TestingScheduleService {
     }
 
     @Test
-    void setHoliday_cancelsActiveBookingOnMatchingDate_andNotifiesUser() {
-        // GIVEN
+    void shouldCancelActiveBookingAndNotifyUserOnMatchingDate() {
         int slotId = 50;
         int userId = 7;
         int bookingId = 500;
@@ -224,10 +190,8 @@ public class TestingScheduleService {
                 .thenReturn(Optional.of(booking(bookingId, userId, slotId, BookingStatus.CONFIRMED)));
         when(userDao.findById(userId)).thenReturn(Optional.of(user(userId, "user@example.com")));
 
-        // WHEN
         scheduleService.setHoliday(date);
 
-        // THEN
         ArgumentCaptor<Booking> captor = ArgumentCaptor.forClass(Booking.class);
         verify(bookingDao).save(captor.capture());
         verify(notificationService).sendCancellation(userId, bookingId, "user@example.com");
@@ -235,40 +199,33 @@ public class TestingScheduleService {
     }
 
     @Test
-    void setHoliday_ignoresSlotsOnDifferentDate() {
-        // GIVEN
+    void shouldIgnoreSlotsOnDifferentDate() {
         int slotId = 51;
         LocalDate otherDate = date.plusDays(1);
         when(scheduleDao.findByDate(date)).thenReturn(Optional.empty());
         when(slotDao.findAll()).thenReturn(List.of(slot(slotId, otherDate)));
 
-        // WHEN
         scheduleService.setHoliday(date);
 
-        // THEN
         verify(bookingDao, never()).findActiveBookingBySlotId(anyInt());
         verify(bookingDao, never()).save(any());
     }
 
     @Test
-    void setHoliday_doesNotCancel_whenNoActiveBookingForSlot() {
-        // GIVEN
+    void shouldNotCancelWhenNoActiveBookingForSlot() {
         int slotId = 52;
         when(scheduleDao.findByDate(date)).thenReturn(Optional.empty());
         when(slotDao.findAll()).thenReturn(List.of(slot(slotId, date)));
         when(bookingDao.findActiveBookingBySlotId(slotId)).thenReturn(Optional.empty());
 
-        // WHEN
         scheduleService.setHoliday(date);
 
-        // THEN
         verify(bookingDao, never()).save(any());
         verify(notificationService, never()).sendCancellation(anyInt(), anyInt(), anyString());
     }
 
     @Test
-    void setHoliday_cancelsBooking_butSkipsNotification_whenUserNotFound() {
-        // GIVEN
+    void shouldCancelBookingButSkipNotificationWhenUserNotFound() {
         int slotId = 53;
         int userId = 8;
         int bookingId = 501;
@@ -278,10 +235,8 @@ public class TestingScheduleService {
                 .thenReturn(Optional.of(booking(bookingId, userId, slotId, BookingStatus.CONFIRMED)));
         when(userDao.findById(userId)).thenReturn(Optional.empty());
 
-        // WHEN
         scheduleService.setHoliday(date);
 
-        // THEN
         verify(bookingDao).save(any(Booking.class));
         verify(notificationService, never()).sendCancellation(anyInt(), anyInt(), anyString());
     }

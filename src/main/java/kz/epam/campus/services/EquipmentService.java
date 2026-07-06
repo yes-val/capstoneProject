@@ -1,42 +1,18 @@
 package kz.epam.campus.services;
-// discrete IF
-import kz.epam.campus.dao.EquipmentDao;
+
 import kz.epam.campus.model.Equipment;
 
 import java.util.List;
 
-import org.springframework.stereotype.Service;
+public interface EquipmentService {
 
-@Service
-public class EquipmentService {
+    List<Equipment> getActiveEquipment();
 
-    private final EquipmentDao equipmentDao;
+    Equipment getById(int equipmentId);
 
-    public EquipmentService(EquipmentDao equipmentDao) {
-        this.equipmentDao = equipmentDao;
-    }
+    void createEquipment(Equipment equipment);
 
-    public List<Equipment> getActiveEquipment() {
-        return equipmentDao.findAllActive();
-    }
+    void updateEquipment(Equipment equipment);
 
-    public Equipment getById(int equipmentId) {
-        return equipmentDao.findById(equipmentId)
-                .orElseThrow(() -> new BookingException("Equipment not found"));
-    }
-
-    public void createEquipment(Equipment equipment) {
-        equipment.setActive(true);
-        equipmentDao.save(equipment);
-    }
-
-    public void updateEquipment(Equipment equipment) {
-        equipmentDao.save(equipment);
-    }
-
-    public void deactivateEquipment(int equipmentId) {
-        Equipment equipment = getById(equipmentId);
-        equipment.setActive(false);
-        equipmentDao.save(equipment);
-    }
+    void deactivateEquipment(int equipmentId);
 }

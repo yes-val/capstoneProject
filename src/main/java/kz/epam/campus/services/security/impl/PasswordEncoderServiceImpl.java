@@ -19,3 +19,5 @@ public class PasswordEncoderServiceImpl implements PasswordEncoderService {
         return encoder.matches(rawPassword, encodedPassword);
     }
 }
+
+//TODO: @PasswordEncoder should match its Bean name

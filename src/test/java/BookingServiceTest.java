@@ -53,14 +53,14 @@ public class BookingServiceTest extends BaseDbTest {
     }
 
     @Test
-    void createBooking_success() {
+    void shouldCreateBooking() {
         Booking b = bookingService.createBooking(userId, equipmentId, slotId1, LocalDate.now());
 
         assertTrue(b.getBookingId() > 0);
     }
 
     @Test
-    void cancelBooking_success() {
+    void shouldCancelBooking() {
         Booking b = bookingService.createBooking(userId, equipmentId, slotId2, LocalDate.now());
 
         assertDoesNotThrow(() ->

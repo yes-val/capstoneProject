@@ -11,11 +11,7 @@ public class TestEmailConfig {
     @Bean
     @Primary
     public EmailService emailService() {
-        return new EmailService("localhost", 0, "test", "test", "test@test.com") {
-            @Override
-            public void send(String toAddress, String message) {
-                // no-op in tests — don't attempt real SMTP connections
-            }
-        };
+        // no-op in tests — don't attempt real SMTP connections
+        return (toAddress, message) -> { };
     }
 }

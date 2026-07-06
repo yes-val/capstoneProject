@@ -11,7 +11,7 @@ public class ScheduleServiceTest extends BaseDbTest {
             ctx.getBean(SlotService.class);
 
     @Test
-    void generateSlots_doesNotCrash() {
+    void shouldNotCrashWhenGeneratingSlots() {
         assertDoesNotThrow(() ->
                 slotService.generateSlotsForDate(LocalDate.now())
         );

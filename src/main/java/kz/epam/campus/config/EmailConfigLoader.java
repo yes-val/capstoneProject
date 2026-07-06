@@ -1,6 +1,7 @@
 package kz.epam.campus.config;
 
 import kz.epam.campus.services.EmailService;
+import kz.epam.campus.services.impl.EmailServiceImpl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,6 +33,6 @@ public class EmailConfigLoader {
         String password = props.getProperty("mail.smtp.password");
         String from = props.getProperty("mail.smtp.from");
 
-        return new EmailService(host, port, username, password, from);
+        return new EmailServiceImpl(host, port, username, password, from);
     }
 }

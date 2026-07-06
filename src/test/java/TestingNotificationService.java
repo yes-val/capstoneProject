@@ -2,7 +2,7 @@ import kz.epam.campus.dao.NotificationDao;
 import kz.epam.campus.model.Notification;
 import kz.epam.campus.model.NotificationStatus;
 import kz.epam.campus.services.EmailService;
-import kz.epam.campus.services.NotificationService;
+import kz.epam.campus.services.impl.NotificationServiceImpl;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,24 +27,16 @@ public class TestingNotificationService {
     private EmailService emailService;
 
     @InjectMocks
-    private NotificationService notificationService;
+    private NotificationServiceImpl notificationService;
 
     private static final int USER_ID = 1;
     private static final int BOOKING_ID = 100;
     private static final String EMAIL = "user@example.com";
 
-    // ---------------------------------------------------------------
-    // sendConfirmation / sendCancellation / sendReminder
-    // ---------------------------------------------------------------
-
     @Test
-    void sendConfirmation_success_savesNotificationAndSendsEmail() throws Exception {
-        // GIVEN - default mock behavior: emailService.send() succeeds
-
-        // WHEN
+    void shouldSaveNotificationAndSendEmailOnConfirmation() throws Exception {
         notificationService.sendConfirmation(USER_ID, BOOKING_ID, EMAIL);
 
-        // THEN
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
         verify(notificationDao).save(captor.capture());
         verify(emailService).send(eq(EMAIL), anyString());
@@ -54,13 +46,9 @@ public class TestingNotificationService {
     }
 
     @Test
-    void sendCancellation_success_savesNotificationAndSendsEmail() throws Exception {
-        // GIVEN - default mock behavior: emailService.send() succeeds
-
-        // WHEN
+    void shouldSaveNotificationAndSendEmailOnCancellation() throws Exception {
         notificationService.sendCancellation(USER_ID, BOOKING_ID, EMAIL);
 
-        // THEN
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
         verify(notificationDao).save(captor.capture());
         verify(emailService).send(eq(EMAIL), anyString());
@@ -68,13 +56,9 @@ public class TestingNotificationService {
     }
 
     @Test
-    void sendReminder_success_savesNotificationAndSendsEmail() throws Exception {
-        // GIVEN - default mock behavior: emailService.send() succeeds
-
-        // WHEN
+    void shouldSaveNotificationAndSendEmailOnReminder() throws Exception {
         notificationService.sendReminder(USER_ID, BOOKING_ID, EMAIL);
 
-        // THEN
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
         verify(notificationDao).save(captor.capture());
         verify(emailService).send(eq(EMAIL), anyString());
@@ -82,48 +66,35 @@ public class TestingNotificationService {
     }
 
     @Test
-    void sendConfirmation_stillSavesNotification_whenEmailSendingFails() throws Exception {
-        // GIVEN
+    void shouldStillSaveNotificationWhenEmailSendingFails() throws Exception {
         doThrow(new MessagingException("SMTP unavailable")).when(emailService).send(eq(EMAIL), anyString());
 
-        // WHEN
         assertDoesNotThrow(() -> notificationService.sendConfirmation(USER_ID, BOOKING_ID, EMAIL));
 
-        // THEN
         verify(notificationDao).save(any(Notification.class));
         verify(emailService).send(eq(EMAIL), anyString());
     }
 
-    // ---------------------------------------------------------------
-    // getUserNotifications
-    // ---------------------------------------------------------------
-
     @Test
-    void getUserNotifications_returnsNotificationsFromDao() {
-        // GIVEN
+    void shouldReturnNotificationsFromDao() {
         Notification n1 = new Notification();
         n1.setUserId(USER_ID);
         n1.setStatus(NotificationStatus.CONFIRMATION);
         List<Notification> expected = List.of(n1);
         when(notificationDao.findByUserId(USER_ID)).thenReturn(expected);
 
-        // WHEN
         List<Notification> result = notificationService.getUserNotifications(USER_ID);
 
-        // THEN
         verify(notificationDao).findByUserId(USER_ID);
         assertEquals(expected, result);
     }
 
     @Test
-    void getUserNotifications_returnsEmptyList_whenNoneExist() {
-        // GIVEN
+    void shouldReturnEmptyListWhenNoneExist() {
         when(notificationDao.findByUserId(USER_ID)).thenReturn(List.of());
 
-        // WHEN
         List<Notification> result = notificationService.getUserNotifications(USER_ID);
 
-        // THEN
         verify(notificationDao).findByUserId(USER_ID);
         assertTrue(result.isEmpty());
     }
