@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:sec="http://www.springframework.org/schema/security"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/security https://www.springframework.org/schema/security/spring-security.xsd
+        http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <sec:http>
+
+        <sec:csrf disabled="true"/>
+
+        <!-- PUBLIC PAGES -->
+        <sec:intercept-url pattern="/login" access="permitAll"/>
+        <sec:intercept-url pattern="/resources/**" access="permitAll"/>
+
+        <sec:intercept-url pattern="/admin/**" access="hasRole('ADMIN')"/>
+        <sec:intercept-url pattern="/booking/**" access="hasAnyRole('USER','ADMIN')"/>
+        <sec:intercept-url pattern="/**" access="permitAll"/>
+
+        <sec:form-login
+                login-page="/login"
+                default-target-url="/home"
+                authentication-failure-url="/login?error=true"/>
+
+        <sec:logout logout-success-url="/login?logout=true"/>
+
+    </sec:http>
+
+    <sec:authentication-manager>
+
+        <sec:authentication-provider user-service-ref="customUserDetailsService">
+
+            <sec:password-encoder ref="passwordEncoder"/>
+
+        </sec:authentication-provider>
+
+    </sec:authentication-manager>
+
+</beans>
